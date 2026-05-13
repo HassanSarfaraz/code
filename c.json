@@ -1,714 +1,784 @@
-{
-  "Linear Regression (single feature, no normalization)": {
-    "prefix": "ml-linreg-raw",
-    "description": "Linear regression on single feature without normalization",
-    "body": [
-      "from sklearn.linear_model import LinearRegression",
-      "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
-      "import numpy as np",
-      "",
-      "X_train_rd = X_train[['R&D Spend']]",
-      "X_test_rd  = X_test[['R&D Spend']]",
-      "",
-      "lr1 = LinearRegression()",
-      "lr1.fit(X_train_rd, y_train)",
-      "y_pred_lr1 = lr1.predict(X_test_rd)",
-      "",
-      "lr_metrics1 = {",
-      "    'MSE':  mean_squared_error(y_test, y_pred_lr1),",
-      "    'RMSE': np.sqrt(mean_squared_error(y_test, y_pred_lr1)),",
-      "    'MAE':  mean_absolute_error(y_test, y_pred_lr1)",
-      "}",
-      "print('Linear Regression Metrics:', lr_metrics1)",
-      "",
-      "plt.figure(figsize=(8, 6))",
-      "plt.scatter(X_test_rd, y_test, color='blue', label='Actual')",
-      "plt.plot(X_test_rd, y_pred_lr1, color='red', label='Best Fit')",
-      "plt.xlabel('R&D Spend')",
-      "plt.ylabel('Profit')",
-      "plt.title('Linear Regression: R&D Spend vs. Profit')",
-      "plt.legend()",
-      "plt.show()"
-    ]
-  },
-  "Linear Regression (single feature, with StandardScaler)": {
-    "prefix": "ml-linreg-scaled",
-    "description": "Linear regression with StandardScaler normalization",
-    "body": [
-      "from sklearn.linear_model import LinearRegression",
-      "from sklearn.preprocessing import StandardScaler",
-      "from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error",
-      "import numpy as np",
-      "",
-      "X_train_rd = X_train[['R&D Spend']]",
-      "X_test_rd  = X_test[['R&D Spend']]",
-      "",
-      "scaler_rd = StandardScaler()",
-      "X_train_rd_scaled = scaler_rd.fit_transform(X_train_rd)",
-      "X_test_rd_scaled  = scaler_rd.transform(X_test_rd)",
-      "",
-      "lr = LinearRegression()",
-      "lr.fit(X_train_rd_scaled, y_train)",
-      "y_pred_lr = lr.predict(X_test_rd_scaled)",
-      "",
-      "lr_metrics = {",
-      "    'MSE':  mean_squared_error(y_test, y_pred_lr),",
-      "    'RMSE': np.sqrt(mean_squared_error(y_test, y_pred_lr)),",
-      "    'MAE':  mean_absolute_error(y_test, y_pred_lr)",
-      "}",
-      "print('Linear Regression Metrics:', lr_metrics)",
-      "",
-      "plt.figure(figsize=(8, 6))",
-      "plt.scatter(X_test_rd_scaled, y_test, color='blue', label='Actual')",
-      "plt.plot(X_test_rd_scaled, y_pred_lr, color='red', label='Best Fit')",
-      "plt.xlabel('R&D Spend (Standardized)')",
-      "plt.ylabel('Profit')",
-      "plt.title('Linear Regression: R&D Spend vs. Profit')",
-      "plt.legend()",
-      "plt.show()"
-    ]
-  },
-  "Multiple Linear Regression (ColumnTransformer pipeline)": {
-    "prefix": "ml-mlr-pipeline",
-    "description": "MLR with ColumnTransformer, OneHotEncoder, and prediction pipeline",
-    "body": [
-      "from sklearn.compose import ColumnTransformer",
-      "from sklearn.preprocessing import StandardScaler, OneHotEncoder",
-      "from sklearn.pipeline import Pipeline",
-      "from sklearn.linear_model import LinearRegression",
-      "import pandas as pd",
-      "",
-      "num_cols = ['R&D Spend', 'Administration', 'Marketing Spend']",
-      "cat_cols = ['State']",
-      "",
-      "preprocessor = ColumnTransformer(",
-      "    transformers=[",
-      "        ('num', StandardScaler(), num_cols),",
-      "        ('cat', OneHotEncoder(), cat_cols)",
-      "    ])",
-      "",
-      "X_train_processed = preprocessor.fit_transform(X_train)",
-      "X_test_processed  = preprocessor.transform(X_test)",
-      "",
-      "feature_names = num_cols + [f\"State_{state}\" for state in preprocessor.named_transformers_['cat'].categories_[0][:]]",
-      "",
-      "mlr = LinearRegression()",
-      "mlr.fit(X_train_processed, y_train)",
-      "y_pred_mlr = mlr.predict(X_test_processed)",
-      "",
-      "mlr_metrics = {",
-      "    'MSE':  mean_squared_error(y_test, y_pred_mlr),",
-      "    'RMSE': np.sqrt(mean_squared_error(y_test, y_pred_mlr)),",
-      "    'MAE':  mean_absolute_error(y_test, y_pred_mlr)",
-      "}",
-      "print('Multiple Linear Regression Metrics:', mlr_metrics)",
-      "",
-      "coef_df = pd.DataFrame({'Feature': feature_names, 'Coefficient': mlr.coef_})",
-      "plt.figure(figsize=(8, 6))",
-      "sns.barplot(x='Coefficient', y='Feature', data=coef_df)",
-      "plt.title('Feature Importance in Multiple Linear Regression')",
-      "plt.show()",
-      "",
-      "mlr_pipeline = Pipeline([",
-      "    ('preprocessor', preprocessor),",
-      "    ('regressor', LinearRegression())",
-      "])",
-      "mlr_pipeline.fit(X_train, y_train)",
-      "",
-      "def predict_profit(rd_spend, administration, marketing_spend, state):",
-      "    input_data = pd.DataFrame({",
-      "        'R&D Spend': [rd_spend],",
-      "        'Administration': [administration],",
-      "        'Marketing Spend': [marketing_spend],",
-      "        'State': [state]",
-      "    })",
-      "    return mlr_pipeline.predict(input_data)[0]",
-      "",
-      "example = predict_profit(100000, 120000, 300000, 'New York')",
-      "print(f'Predicted Profit: ${example:.2f}')"
-    ]
-  },
-  "Logistic Regression": {
-    "prefix": "ml-logreg",
-    "description": "Logistic regression on Pima diabetes dataset",
-    "body": [
-      "import pandas as pd",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.linear_model import LogisticRegression",
-      "from sklearn import metrics",
-      "",
-      "col_names = ['pregnant', 'glucose', 'bp', 'skin', 'insulin', 'bmi', 'pedigree', 'age', 'label']",
-      "pima = pd.read_csv(\"data/diabetes.csv\", header=1, names=col_names)",
-      "",
-      "feature_cols = ['pregnant', 'insulin', 'bmi', 'age', 'glucose', 'bp', 'pedigree']",
-      "X = pima[feature_cols]",
-      "y = pima.label",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)",
-      "",
-      "logreg = LogisticRegression(multi_class='multinomial')",
-      "logreg.fit(X_train, y_train)",
-      "y_pred = logreg.predict(X_test)",
-      "",
-      "cnf_matrix = metrics.confusion_matrix(y_test, y_pred)",
-      "print(cnf_matrix)",
-      "print(\"Accuracy:\",  metrics.accuracy_score(y_test, y_pred))",
-      "print(\"Precision:\", metrics.precision_score(y_test, y_pred))",
-      "print(\"Recall:\",    metrics.recall_score(y_test, y_pred))",
-      "print(\"F1:\",        metrics.f1_score(y_test, y_pred))"
-    ]
-  },
-  "KNN + SMOTE + GridSearchCV (full MLOps pipeline)": {
-    "prefix": "ml-knn-mlops",
-    "description": "Full KNN pipeline with scaler comparison, SMOTE, GridSearchCV, joblib save",
-    "body": [
-      "import numpy as np",
-      "import pandas as pd",
-      "from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold",
-      "from sklearn.preprocessing import StandardScaler, MinMaxScaler",
-      "from sklearn.neighbors import KNeighborsClassifier",
-      "from sklearn.metrics import (accuracy_score, precision_score, recall_score,",
-      "    f1_score, confusion_matrix, classification_report)",
-      "from imblearn.over_sampling import SMOTE",
-      "import joblib",
-      "",
-      "col_names = ['Pregnancies','Glucose','BloodPressure','SkinThickness',",
-      "             'Insulin','BMI','DiabetesPedigreeFunction','Age','Outcome']",
-      "data = pd.read_csv(",
-      "    \"https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv\",",
-      "    header=None, names=col_names)",
-      "print(\"Dataset shape:\", data.shape)",
-      "",
-      "cols_with_zero_invalid = ['Glucose','BloodPressure','SkinThickness','Insulin','BMI']",
-      "data[cols_with_zero_invalid] = data[cols_with_zero_invalid].replace(0, np.nan)",
-      "data.fillna(data.median(), inplace=True)",
-      "",
-      "X = data.drop(\"Outcome\", axis=1)",
-      "y = data[\"Outcome\"]",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(",
-      "    X, y, test_size=0.2, random_state=42, stratify=y)",
-      "",
-      "scalers = {\"StandardScaler\": StandardScaler(), \"MinMaxScaler\": MinMaxScaler()}",
-      "results_scalers = {}",
-      "for scaler_name, scaler in scalers.items():",
-      "    X_train_scaled = scaler.fit_transform(X_train)",
-      "    X_test_scaled  = scaler.transform(X_test)",
-      "    knn = KNeighborsClassifier(n_neighbors=5, metric=\"euclidean\")",
-      "    knn.fit(X_train_scaled, y_train)",
-      "    y_pred = knn.predict(X_test_scaled)",
-      "    results_scalers[scaler_name] = f1_score(y_test, y_pred)",
-      "",
-      "print(\"F1 Scores by Scaler:\", results_scalers)",
-      "best_scaler_name = max(results_scalers, key=results_scalers.get)",
-      "print(\"Best scaler:\", best_scaler_name)",
-      "scaler = scalers[best_scaler_name]",
-      "X_train_scaled = scaler.fit_transform(X_train)",
-      "X_test_scaled  = scaler.transform(X_test)",
-      "",
-      "print(\"Class distribution before SMOTE:\", np.bincount(y_train))",
-      "smote = SMOTE(random_state=42)",
-      "X_train_scaled, y_train = smote.fit_resample(X_train_scaled, y_train)",
-      "print(\"Class distribution after SMOTE:\", np.bincount(y_train))",
-      "",
-      "param_grid = {",
-      "    \"n_neighbors\": [3, 5, 7, 9, 11],",
-      "    \"weights\":     [\"uniform\", \"distance\"],",
-      "    \"metric\":      [\"euclidean\", \"manhattan\", \"minkowski\", \"cosine\"],",
-      "    \"p\":           [1, 2, 3]",
-      "}",
-      "cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)",
-      "grid_search = GridSearchCV(KNeighborsClassifier(), param_grid, scoring=\"f1\",",
-      "                           cv=cv, n_jobs=-1, verbose=1)",
-      "grid_search.fit(X_train_scaled, y_train)",
-      "print(\"Best Parameters:\", grid_search.best_params_)",
-      "print(\"Best CV F1 Score:\", grid_search.best_score_)",
-      "best_knn = grid_search.best_estimator_",
-      "",
-      "y_pred = best_knn.predict(X_test_scaled)",
-      "print(\"Confusion matrix\\n\", confusion_matrix(y_test, y_pred))",
-      "print(\"Classification Report:\\n\", classification_report(y_test, y_pred))",
-      "",
-      "joblib.dump(best_knn, \"best_knn_model.pkl\")",
-      "joblib.dump(scaler,   \"scaler.pkl\")",
-      "print(\"Best tuned model and scaler saved!\")",
-      "",
-      "def predict_diabetes(input_data):",
-      "    model  = joblib.load(\"best_knn_model.pkl\")",
-      "    scaler = joblib.load(\"scaler.pkl\")",
-      "    df = pd.DataFrame([input_data])",
-      "    df_scaled = scaler.transform(df)",
-      "    prediction = model.predict(df_scaled)",
-      "    return \"Diabetic\" if prediction[0] == 1 else \"Non-Diabetic\"",
-      "",
-      "user_data = {",
-      "    'Glucose': 130, 'BloodPressure': 72, 'SkinThickness': 30,",
-      "    'Insulin': 120, 'BMI': 25.5, 'DiabetesPedigreeFunction': 0.6, 'Age': 40",
-      "}",
-      "print(\"Prediction for sample:\", predict_diabetes(user_data))"
-    ]
-  },
-  "Naive Bayes (all 5 variants)": {
-    "prefix": "ml-naive-bayes",
-    "description": "GaussianNB, MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB on Iris",
-    "body": [
-      "import numpy as np",
-      "import pandas as pd",
-      "from sklearn.datasets import load_iris",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB",
-      "from sklearn.metrics import confusion_matrix, classification_report",
-      "",
-      "iris = load_iris()",
-      "df = pd.DataFrame(iris.data, columns=iris.feature_names)",
-      "df['Target'] = iris.target",
-      "",
-      "x = df.iloc[:, :-1].values",
-      "y = df.iloc[:, -1].values",
-      "",
-      "x_train, x_test, y_train, y_test = train_test_split(",
-      "    x, y, test_size=0.2, random_state=50, shuffle=True)",
-      "",
-      "gnb  = GaussianNB();    gnb.fit(x_train, y_train)",
-      "mnb  = MultinomialNB(); mnb.fit(x_train, y_train)",
-      "bnb  = BernoulliNB();   bnb.fit(x_train, y_train)",
-      "cnb  = ComplementNB();  cnb.fit(x_train, y_train)",
-      "cgnb = CategoricalNB(); cgnb.fit(x_train, y_train)",
-      "",
-      "y_pred = gnb.predict(x_test)",
-      "print(confusion_matrix(y_test, y_pred))",
-      "print(classification_report(y_test, y_pred))",
-      "",
-      "R = {",
-      "    \"GaussianNB\":    [gnb.score(x_test, y_test)],",
-      "    \"MultinomialNB\": [mnb.score(x_test, y_test)],",
-      "    \"BernoulliNB\":   [bnb.score(x_test, y_test)],",
-      "    \"ComplementNB\":  [cnb.score(x_test, y_test)],",
-      "    \"CategoricalNB\": [cgnb.score(x_test, y_test)]",
-      "}",
-      "records = pd.DataFrame(R)",
-      "print(records)"
-    ]
-  },
-  "Decision Tree Regressor + GridSearchCV + Feature Importance": {
-    "prefix": "ml-dtr-grid",
-    "description": "DecisionTreeRegressor with GridSearchCV tuning and feature importance",
-    "body": [
-      "import pandas as pd",
-      "import numpy as np",
-      "from sklearn.tree import DecisionTreeRegressor, plot_tree",
-      "from sklearn.model_selection import train_test_split, GridSearchCV",
-      "from sklearn.metrics import r2_score",
-      "from matplotlib.pylab import rcParams",
-      "import matplotlib.pyplot as plt",
-      "",
-      "df = pd.read_csv(\"housing.csv\")",
-      "df[\"total_bedrooms\"] = df[\"total_bedrooms\"].fillna(df[\"total_bedrooms\"].median())",
-      "",
-      "X = df.iloc[:, 2:8]",
-      "y = df.iloc[:, 8]",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
-      "",
-      "rt = DecisionTreeRegressor(criterion='absolute_error', max_depth=2)",
-      "rt.fit(X_train, y_train)",
-      "y_pred = rt.predict(X_test)",
-      "print(r2_score(y_test, y_pred))",
-      "",
-      "param_grid = {",
-      "    'max_depth':         [2, 4, 8, 10, None],",
-      "    'criterion':         ['squared_error', 'absolute_error'],",
-      "    'max_features':      [0.25, 0.5, 1.0],",
-      "    'min_samples_split': [0.25, 0.5, 1.0]",
-      "}",
-      "reg = GridSearchCV(DecisionTreeRegressor(), param_grid=param_grid)",
-      "reg.fit(X_train, y_train)",
-      "print(reg.best_score_)",
-      "print(reg.best_params_)",
-      "",
-      "for importance, name in sorted(zip(rt.feature_importances_, X_train.columns), reverse=True):",
-      "    print(name, importance)",
-      "",
-      "rcParams['figure.figsize'] = 50, 30",
-      "plot_tree(rt)",
-      "plt.show()"
-    ]
-  },
-  "Bagging Classifier (KNN base, Wine dataset)": {
-    "prefix": "ml-bagging-knn",
-    "description": "BaggingClassifier wrapping KNN with OOB score on Wine dataset",
-    "body": [
-      "from sklearn.ensemble import BaggingClassifier",
-      "from sklearn.neighbors import KNeighborsClassifier",
-      "from sklearn.datasets import load_wine",
-      "from sklearn.model_selection import train_test_split",
-      "",
-      "dataset = load_wine()",
-      "X = dataset.data",
-      "y = dataset.target",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=3)",
-      "",
-      "knn = KNeighborsClassifier(n_neighbors=5)",
-      "knn.fit(X_train, y_train)",
-      "print(knn.score(X_test, y_test))",
-      "",
-      "bag_knn = BaggingClassifier(KNeighborsClassifier(n_neighbors=5),",
-      "                            n_estimators=10, max_samples=0.5,",
-      "                            bootstrap=True, random_state=3, oob_score=True)",
-      "bag_knn.fit(X_train, y_train)",
-      "print(bag_knn.score(X_test, y_test))"
-    ]
-  },
-  "Random Forest Classifier (Social Network Ads)": {
-    "prefix": "ml-rf-clf",
-    "description": "RandomForestClassifier on Social Network Ads dataset",
-    "body": [
-      "import numpy as np",
-      "import matplotlib.pyplot as plt",
-      "import pandas as pd",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.ensemble import RandomForestClassifier",
-      "",
-      "dataset = pd.read_csv('Social_Network_Ads.csv')",
-      "X = dataset.iloc[:, [2, 3]].values",
-      "y = dataset.iloc[:, -1].values",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)",
-      "",
-      "classifier = RandomForestClassifier(n_estimators=10, criterion='entropy', random_state=0)",
-      "classifier.fit(X_train, y_train)",
-      "y_pred = classifier.predict(X_test)"
-    ]
-  },
-  "Ensemble Averaging (Linear + KNN + DT + RF regressors)": {
-    "prefix": "ml-ensemble-avg",
-    "description": "Train multiple regressors and average predictions (ensemble)",
-    "body": [
-      "import numpy as np",
-      "import pandas as pd",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.linear_model import LinearRegression",
-      "from sklearn.neighbors import KNeighborsRegressor",
-      "from sklearn.tree import DecisionTreeRegressor",
-      "from sklearn.ensemble import RandomForestRegressor",
-      "from sklearn.metrics import mean_squared_error, r2_score",
-      "",
-      "df = pd.read_csv(\"housing.csv\")",
-      "df[\"total_bedrooms\"] = df[\"total_bedrooms\"].fillna(df[\"total_bedrooms\"].median())",
-      "",
-      "X = df.iloc[:, 2:8]",
-      "y = df.iloc[:, 8]",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)",
-      "",
-      "regressors = [",
-      "    (\"Linear\",       LinearRegression()),",
-      "    (\"KNN\",          KNeighborsRegressor(n_neighbors=5)),",
-      "    (\"DecisionTree\", DecisionTreeRegressor(random_state=42)),",
-      "    (\"RandomForest\", RandomForestRegressor(n_estimators=100, random_state=42))",
-      "]",
-      "",
-      "def train_and_predict(models, X_train, y_train, X_test):",
-      "    predictions = []",
-      "    for name, model in models:",
-      "        model.fit(X_train, y_train)",
-      "        y_pred = model.predict(X_test)",
-      "        predictions.append(y_pred)",
-      "        print(f\"{name} R² Score: {r2_score(y_test, y_pred):.4f}\")",
-      "    return np.array(predictions)",
-      "",
-      "preds = train_and_predict(regressors, X_train, y_train, X_test)",
-      "",
-      "ensemble_pred = np.mean(preds, axis=0)",
-      "ensemble_mse  = mean_squared_error(y_test, ensemble_pred)",
-      "ensemble_r2   = r2_score(y_test, ensemble_pred)",
-      "print(\"\\nEnsemble Regression Performance:\")",
-      "print(f\"MSE: {ensemble_mse:.4f}\")",
-      "print(f\"R²:  {ensemble_r2:.4f}\")"
-    ]
-  },
-  "Custom Bagger + Random Forest + Voting (Heart Disease)": {
-    "prefix": "ml-custom-bagger",
-    "description": "Custom bootstrap bagger vs RandomForest with VotingClassifier on Heart Disease",
-    "body": [
-      "import numpy as np",
-      "import pandas as pd",
-      "import matplotlib.pyplot as plt",
-      "import seaborn as sns",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.tree import DecisionTreeClassifier",
-      "from sklearn.neighbors import KNeighborsClassifier",
-      "from sklearn.linear_model import LogisticRegression",
-      "from sklearn.ensemble import RandomForestClassifier, VotingClassifier",
-      "from sklearn.metrics import accuracy_score, classification_report",
-      "from sklearn.utils import resample",
-      "from scipy.stats import mode",
-      "",
-      "df = pd.read_csv(\"heart.csv\")",
-      "print(\"Shape:\", df.shape)",
-      "",
-      "sns.countplot(x='target', data=df)",
-      "plt.title(\"Heart Disease Distribution (0 = No Disease, 1 = Disease)\")",
-      "plt.show()",
-      "",
-      "X = df.drop(\"target\", axis=1)",
-      "y = df[\"target\"]",
-      "X_train, X_test, y_train, y_test = train_test_split(",
-      "    X, y, test_size=0.2, random_state=42, stratify=y)",
-      "",
-      "rf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)",
-      "rf.fit(X_train, y_train)",
-      "rf_acc = accuracy_score(y_test, rf.predict(X_test))",
-      "print(\"Random Forest Accuracy:\", rf_acc)",
-      "",
-      "def bagger_fit_predict(model_fns, X_train, y_train, X_test, n_estimators=15):",
-      "    all_preds = []",
-      "    for fn in model_fns:",
-      "        for _ in range(n_estimators):",
-      "            X_bs, y_bs = resample(X_train, y_train, replace=True)",
-      "            model = fn()",
-      "            model.fit(X_bs, y_bs)",
-      "            all_preds.append(model.predict(X_test))",
-      "    all_preds   = np.array(all_preds)",
-      "    final_preds = mode(all_preds, axis=0).mode",
-      "    return final_preds.ravel()",
-      "",
-      "model_list = [",
-      "    lambda: DecisionTreeClassifier(max_depth=5),",
-      "    lambda: KNeighborsClassifier(n_neighbors=5),",
-      "    lambda: LogisticRegression(max_iter=50)",
-      "]",
-      "bagger_preds = bagger_fit_predict(model_list, X_train, y_train, X_test, n_estimators=15)",
-      "bagger_acc   = accuracy_score(y_test, bagger_preds)",
-      "print(\"Custom Bagger Accuracy:\", bagger_acc)",
-      "",
-      "results = pd.DataFrame({\"Model\": [\"Random Forest\", \"Custom Bagger\"],",
-      "                         \"Accuracy\": [rf_acc, bagger_acc]})",
-      "sns.barplot(x=\"Model\", y=\"Accuracy\", data=results)",
-      "plt.title(\"Model Comparison on Heart Disease Dataset\")",
-      "plt.ylim(0, 1)",
-      "plt.show()",
-      "",
-      "print(\"Classification Report (Custom Bagger):\")",
-      "print(classification_report(y_test, bagger_preds))",
-      "",
-      "voting_ensemble = VotingClassifier(",
-      "    estimators=[",
-      "        ('dt',  DecisionTreeClassifier(max_depth=5)),",
-      "        ('knn', KNeighborsClassifier(n_neighbors=3))",
-      "    ],",
-      "    voting='soft'",
-      ")",
-      "voting_ensemble.fit(X_train, y_train)",
-      "print(\"Voting Ensemble Accuracy:\", voting_ensemble.score(X_test, y_test))"
-    ]
-  },
-  "SVM Linear kernel + decision boundary": {
-    "prefix": "ml-svm-linear",
-    "description": "Linear SVC with decision boundary and margin visualization",
-    "body": [
-      "%matplotlib inline",
-      "import numpy as np",
-      "import matplotlib.pyplot as plt",
-      "import seaborn as sns; sns.set()",
-      "from sklearn.datasets import make_blobs",
-      "from sklearn.svm import SVC",
-      "",
-      "X, y = make_blobs(n_samples=50, centers=2, random_state=0, cluster_std=0.60)",
-      "plt.scatter(X[:, 0], X[:, 1], c=y, s=80, cmap='winter')",
-      "plt.show()",
-      "",
-      "model = SVC(kernel='linear', C=1)",
-      "model.fit(X, y)",
-      "",
-      "def plot_svc_decision_function(model, ax=None, plot_support=True):",
-      "    if ax is None:",
-      "        ax = plt.gca()",
-      "    xlim = ax.get_xlim()",
-      "    ylim = ax.get_ylim()",
-      "    x = np.linspace(xlim[0], xlim[1], 30)",
-      "    y = np.linspace(ylim[0], ylim[1], 30)",
-      "    Y, X = np.meshgrid(y, x)",
-      "    xy = np.vstack([X.ravel(), Y.ravel()]).T",
-      "    P  = model.decision_function(xy).reshape(X.shape)",
-      "    ax.contour(X, Y, P, colors='k',",
-      "               levels=[-1, 0, 1], alpha=0.5,",
-      "               linestyles=['--', '-', '--'])",
-      "    if plot_support:",
-      "        ax.scatter(model.support_vectors_[:, 0],",
-      "                   model.support_vectors_[:, 1],",
-      "                   s=300, linewidth=1, facecolors='none')",
-      "    ax.set_xlim(xlim)",
-      "    ax.set_ylim(ylim)",
-      "",
-      "plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='winter')",
-      "plot_svc_decision_function(model)",
-      "",
-      "def plot_svm(N=10, ax=None):",
-      "    X, y = make_blobs(n_samples=200, centers=2, random_state=0, cluster_std=0.60)",
-      "    X = X[:N]; y = y[:N]",
-      "    model = SVC(kernel='linear', C=1E10)",
-      "    model.fit(X, y)",
-      "    ax = ax or plt.gca()",
-      "    ax.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='winter')",
-      "    ax.set_xlim(-1, 4); ax.set_ylim(-1, 6)",
-      "    plot_svc_decision_function(model, ax)",
-      "",
-      "fig, ax = plt.subplots(1, 2, figsize=(16, 6))",
-      "fig.subplots_adjust(left=0.0625, right=0.95, wspace=0.1)",
-      "for axi, N in zip(ax, [60, 120]):",
-      "    plot_svm(N, axi)",
-      "    axi.set_title('N = {0}'.format(N))"
-    ]
-  },
-  "SVM RBF + Polynomial kernel (circles dataset)": {
-    "prefix": "ml-svm-kernel",
-    "description": "RBF and Poly SVC with decision boundary on make_circles",
-    "body": [
-      "import numpy as np",
-      "import matplotlib.pyplot as plt",
-      "from sklearn.datasets import make_circles",
-      "from sklearn.model_selection import train_test_split",
-      "from sklearn.svm import SVC",
-      "from sklearn.metrics import accuracy_score",
-      "from matplotlib.colors import ListedColormap",
-      "",
-      "X, y = make_circles(100, factor=.1, noise=.1)",
-      "plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='bwr')",
-      "plt.show()",
-      "",
-      "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)",
-      "",
-      "zero_one_colourmap = ListedColormap(['blue', 'red'])",
-      "",
-      "def plot_decision_boundary(X, y, clf):",
-      "    X1, X2 = np.meshgrid(",
-      "        np.arange(start=X[:, 0].min()-1, stop=X[:, 0].max()+1, step=0.01),",
-      "        np.arange(start=X[:, 1].min()-1, stop=X[:, 1].max()+1, step=0.01))",
-      "    Z = clf.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape)",
-      "    plt.contourf(X1, X2, Z, alpha=0.75, cmap=zero_one_colourmap)",
-      "    plt.xlim(X1.min(), X1.max())",
-      "    plt.ylim(X2.min(), X2.max())",
-      "    for i, j in enumerate(np.unique(y)):",
-      "        plt.scatter(X[y == j, 0], X[y == j, 1],",
-      "                    color=zero_one_colourmap(i), label=j, edgecolor='black', s=80)",
-      "    plt.title('SVM Decision Boundary')",
-      "    plt.xlabel('X1'); plt.ylabel('X2'); plt.legend()",
-      "    return plt.show()",
-      "",
-      "classifier = SVC(kernel=\"linear\", C=1.0, random_state=1)",
-      "classifier.fit(X_train, y_train.ravel())",
-      "print(accuracy_score(y_test, classifier.predict(X_test)))",
-      "plot_decision_boundary(X, y, classifier)",
-      "",
-      "rbf_classifier = SVC(kernel=\"rbf\")",
-      "rbf_classifier.fit(X_train, y_train)",
-      "print(accuracy_score(y_test, rbf_classifier.predict(X_test)))",
-      "plot_decision_boundary(X, y, rbf_classifier)",
-      "",
-      "rbf_classifier1 = SVC(kernel=\"rbf\", random_state=1, gamma=0.10, C=10.0)",
-      "rbf_classifier1.fit(X_train, y_train)",
-      "print(accuracy_score(y_test, rbf_classifier1.predict(X_test)))",
-      "plot_decision_boundary(X, y, rbf_classifier1)",
-      "",
-      "rbf_classifier1 = SVC(kernel=\"rbf\", random_state=1, gamma=0.2, C=1.0)",
-      "rbf_classifier1.fit(X_train, y_train)",
-      "print(accuracy_score(y_test, rbf_classifier1.predict(X_test)))",
-      "plot_decision_boundary(X, y, rbf_classifier1)",
-      "",
-      "rbf_classifier2 = SVC(kernel=\"rbf\", random_state=1, gamma=100.0, C=1.0)",
-      "rbf_classifier2.fit(X_train, y_train)",
-      "print(accuracy_score(y_test, rbf_classifier2.predict(X_test)))",
-      "plot_decision_boundary(X, y, rbf_classifier2)",
-      "",
-      "poly_classifier = SVC(kernel=\"poly\", degree=2)",
-      "poly_classifier.fit(X_train, y_train)",
-      "print(accuracy_score(y_test, poly_classifier.predict(X_test)))",
-      "plot_decision_boundary(X, y, poly_classifier)"
-    ]
-  },
-  "ANN PyTorch binary classifier (Pima Diabetes)": {
-    "prefix": "ml-ann-pytorch",
-    "description": "Two-hidden-layer ANN in PyTorch with BCE loss and Adam optimizer",
-    "body": [
-      "import numpy as np",
-      "import torch",
-      "import torch.nn as nn",
-      "import torch.optim as optim",
-      "",
-      "dataset = np.loadtxt('sample_data/diabtes.csv', delimiter=',')",
-      "X = dataset[:, 0:8]",
-      "y = dataset[:, 8]",
-      "",
-      "X = torch.tensor(X, dtype=torch.float32)",
-      "y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)",
-      "",
-      "class PimaClassifier(nn.Module):",
-      "    def __init__(self):",
-      "        super().__init__()",
-      "        self.hidden1    = nn.Linear(8, 12)",
-      "        self.act1       = nn.ReLU()",
-      "        self.hidden2    = nn.Linear(12, 8)",
-      "        self.act2       = nn.ReLU()",
-      "        self.output     = nn.Linear(8, 1)",
-      "        self.act_output = nn.Sigmoid()",
-      "",
-      "    def forward(self, x):",
-      "        x = self.act1(self.hidden1(x))",
-      "        x = self.act2(self.hidden2(x))",
-      "        x = self.act_output(self.output(x))",
-      "        return x",
-      "",
-      "model = PimaClassifier()",
-      "print(model)",
-      "",
-      "loss_fn   = nn.BCELoss()",
-      "optimizer = optim.Adam(model.parameters(), lr=0.001)",
-      "",
-      "n_epochs   = 100",
-      "batch_size = 10",
-      "",
-      "for epoch in range(n_epochs):",
-      "    for i in range(0, len(X), batch_size):",
-      "        Xbatch = X[i:i+batch_size]",
-      "        y_pred = model(Xbatch)",
-      "        ybatch = y[i:i+batch_size]",
-      "        loss   = loss_fn(y_pred, ybatch)",
-      "        optimizer.zero_grad()",
-      "        loss.backward()",
-      "        optimizer.step()",
-      "",
-      "y_pred   = model(X)",
-      "accuracy = (y_pred.round() == y).float().mean()",
-      "print(f\"Accuracy {accuracy}\")",
-      "",
-      "predictions = (model(X) > 0.5).int()",
-      "for i in range(5):",
-      "    print('%s => %d (expected %d)' % (X[i].tolist(), predictions[i], y[i]))"
-    ]
-  },
-  "K-Means Clustering": {
-    "prefix": "ml-kmeans",
-    "description": "KMeans clustering with synthetic blobs and centroid visualization",
-    "body": [
-      "import matplotlib.pyplot as plt",
-      "from sklearn.cluster import KMeans",
-      "from sklearn.datasets import make_blobs",
-      "",
-      "X, y = make_blobs(n_samples=300, centers=3, cluster_std=0.60, random_state=0)",
-      "",
-      "kmeans = KMeans(n_clusters=3, n_init='auto')",
-      "kmeans.fit(X)",
-      "",
-      "y_kmeans = kmeans.predict(X)",
-      "centers  = kmeans.cluster_centers_",
-      "",
-      "plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')",
-      "plt.scatter(centers[:, 0], centers[:, 1], c='red', s=200, alpha=0.75, marker='X')",
-      "plt.title(\"K-Means Clustering Results\")",
-      "plt.show()"
-    ]
-  }
-}
+CS232L – DATABASE MANAGEMENT SYSTEM
+LABS 3–10 CHEAT SHEET
+================================================================================
 
+================================================================================
+LAB 3 — ORDER BY / GROUP BY / HAVING
+================================================================================
+
+--- GROUP BY ---
+SELECT col1, AGG_FUNC(col2)
+FROM table
+GROUP BY col1;
+
+Examples:
+  SELECT customer_id, SUM(amount) FROM payment GROUP BY customer_id;
+  SELECT staff_id, COUNT(payment_id) FROM payment GROUP BY staff_id;
+  SELECT customer_id, staff_id, SUM(amount) FROM payment GROUP BY staff_id, customer_id ORDER BY customer_id;
+  SELECT DATE(payment_date) paid_date, SUM(amount) FROM payment GROUP BY DATE(payment_date);
+
+--- HAVING ---
+SELECT col1, AGG_FUNC(col2)
+FROM table
+GROUP BY col1
+HAVING condition;
+
+Example:
+  SELECT customer_id, SUM(amount) FROM payment
+  GROUP BY customer_id
+  HAVING SUM(amount) > 200;
+
+WHERE vs HAVING:
+  WHERE  → filters rows BEFORE grouping  (no aggregates allowed)
+  HAVING → filters groups AFTER grouping (aggregates allowed)
+
+--- ORDER BY ---
+SELECT select_list FROM table
+ORDER BY expr1 [ASC|DESC], expr2 [ASC|DESC];
+
+  ASC  = A→Z, 1→9 (default)
+  DESC = Z→A, 9→1
+
+Examples:
+  SELECT first_name, last_name FROM customer ORDER BY first_name ASC;
+  SELECT first_name, last_name FROM customer ORDER BY last_name DESC;
+  SELECT first_name, last_name FROM customer ORDER BY first_name ASC, last_name DESC;
+
+Execution order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT
+
+
+================================================================================
+LAB 4 — CONSTRAINTS
+================================================================================
+
+--- CONSTRAINT TYPES ---
+NOT NULL    → column must always have a value
+UNIQUE      → all values in column must be distinct
+PRIMARY KEY → NOT NULL + UNIQUE, uniquely identifies each row
+FOREIGN KEY → references PK in another table (referential integrity)
+CHECK       → value must satisfy a boolean expression
+
+--- PRIMARY KEY ---
+-- Single column:
+CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT);
+
+-- Composite:
+CREATE TABLE t (col1 INT, col2 INT, data TEXT, PRIMARY KEY (col1, col2));
+
+-- Named:
+CONSTRAINT pk_name PRIMARY KEY (col1, col2)
+
+-- Add to existing table:
+ALTER TABLE products ADD PRIMARY KEY (product_no);
+
+-- Auto-increment PK on existing table:
+ALTER TABLE vendors ADD COLUMN id SERIAL PRIMARY KEY;
+
+-- Remove:
+ALTER TABLE products DROP CONSTRAINT products_pkey;
+
+--- FOREIGN KEY ---
+CREATE TABLE child (
+    id INT PRIMARY KEY,
+    parent_id INT,
+    CONSTRAINT fk_name
+        FOREIGN KEY (parent_id)
+        REFERENCES parent_table(parent_id_col)
+        [ON DELETE CASCADE | SET NULL | SET DEFAULT | RESTRICT | NO ACTION]
+);
+
+-- Add to existing table:
+ALTER TABLE child ADD CONSTRAINT fk_name FOREIGN KEY (col) REFERENCES parent(col);
+
+-- Drop then re-add with CASCADE:
+ALTER TABLE child DROP CONSTRAINT fk_name;
+ALTER TABLE child ADD CONSTRAINT fk_name FOREIGN KEY (col) REFERENCES parent(col) ON DELETE CASCADE;
+
+ON DELETE actions:
+  NO ACTION  → error if child rows exist (default)
+  CASCADE    → auto-delete child rows
+  SET NULL   → set FK column to NULL
+  SET DEFAULT → set FK column to default value
+  RESTRICT   → immediately prevent deletion
+
+--- CHECK ---
+-- Inline:
+salary NUMERIC CHECK(salary > 0)
+birth_date DATE CHECK(birth_date > '1900-01-01')
+joined_date DATE CHECK(joined_date > birth_date)
+
+-- Named:
+salary NUMERIC CONSTRAINT positive_salary CHECK(salary > 0)
+
+-- Add to existing table:
+ALTER TABLE prices_list
+ADD CONSTRAINT price_discount_check
+CHECK (price > 0 AND discount >= 0 AND price > discount);
+
+--- UNIQUE ---
+-- Column-level:
+email VARCHAR(50) UNIQUE
+
+-- Table-level:
+UNIQUE(email)
+
+-- Multi-column unique:
+UNIQUE(c2, c3)
+
+-- Drop:
+ALTER TABLE tbl DROP CONSTRAINT constraint_name;
+
+--- NOT NULL ---
+-- Declaration:
+column_name data_type NOT NULL
+
+-- Add to existing:
+ALTER TABLE t ALTER COLUMN col SET NOT NULL;
+
+-- Add to multiple:
+ALTER TABLE t
+    ALTER COLUMN c1 SET NOT NULL,
+    ALTER COLUMN c2 SET NOT NULL;
+
+-- Drop:
+ALTER TABLE t ALTER COLUMN col DROP NOT NULL;
+
+-- Either/or logic (at least one must be non-null):
+CONSTRAINT name CHECK (
+    NOT ((col1 IS NULL OR col1 = '') AND (col2 IS NULL OR col2 = ''))
+)
+
+NULL rules:
+  NULL != NULL → NULL   (use IS NULL / IS NOT NULL to check)
+  NULL = NULL  → NULL   (not TRUE)
+
+
+================================================================================
+LAB 5 — AGGREGATE FUNCTIONS & SUBQUERIES
+================================================================================
+
+--- AGGREGATE FUNCTIONS ---
+AVG(col)        → average (use ROUND(AVG(col), 2) for decimals)
+COUNT(*)        → count all rows
+COUNT(col)      → count non-null values
+MAX(col)        → maximum value
+MIN(col)        → minimum value
+SUM(col)        → total sum
+
+STRING_AGG(col, separator [ORDER BY col ASC|DESC])
+  → concatenates strings with separator
+
+Examples:
+  SELECT ROUND(AVG(replacement_cost), 2) FROM film;
+  SELECT COUNT(*) FROM film;
+  SELECT MAX(replacement_cost) FROM film;
+  SELECT MIN(replacement_cost) FROM film;
+  SELECT rating, SUM(rental_duration) FROM film GROUP BY rating ORDER BY rating;
+
+  SELECT team_name, string_agg(player_name, ',') FROM players GROUP BY team_name;
+  SELECT team_name, string_agg(player_name, ',' ORDER BY player_name ASC) FROM players GROUP BY team_name;
+
+Aggregate functions only allowed in SELECT and HAVING clauses.
+
+--- SUBQUERY GENERAL SYNTAX ---
+SELECT ... FROM ... WHERE col OPERATOR (SELECT ... FROM ...);
+
+Rules:
+  - Must be enclosed in parentheses
+  - Executes before outer query
+  - Single-row subquery → use =, >, <, >=, <=, !=
+  - Multi-row subquery → use IN, ANY, ALL, EXISTS
+
+--- SCALAR SUBQUERY (returns 1 value) ---
+SELECT first_name, last_name, salary FROM employees
+WHERE salary > (SELECT MAX(salary) FROM employees WHERE first_name = 'Alexander');
+
+--- ALL (condition must hold for every returned value) ---
+SELECT department_id, AVG(SALARY)
+FROM employees GROUP BY department_id
+HAVING AVG(SALARY) >= ALL (SELECT AVG(SALARY) FROM employees GROUP BY department_id);
+
+--- ANY / SOME (condition holds for at least one value) ---
+-- IN = = ANY
+SELECT first_name, last_name, department_id FROM employees
+WHERE department_id = ANY (SELECT department_id FROM departments WHERE location_id = 1700);
+
+--- IN ---
+SELECT first_name, last_name FROM employees
+WHERE department_id IN (SELECT department_id FROM departments WHERE location_id = 1800);
+
+--- NOT IN ---
+SELECT first_name, last_name FROM employees
+WHERE department_id NOT IN (SELECT department_id FROM departments WHERE manager_id BETWEEN 100 AND 200);
+
+--- EXISTS (true if subquery returns ≥1 row) ---
+SELECT employee_id, first_name FROM employees E
+WHERE EXISTS (SELECT * FROM employees WHERE manager_id = E.employee_id);
+
+--- ROW SUBQUERY ---
+SELECT first_name FROM employees
+WHERE ROW(department_id, manager_id) = (SELECT department_id, manager_id FROM departments WHERE location_id = 1800);
+
+--- SUBQUERY IN FROM (derived table) ---
+SELECT AVG(sq_sum)
+FROM (SELECT SUM(score) AS sq_sum FROM student GROUP BY name) AS t;
+
+
+================================================================================
+LAB 6 — JOINS
+================================================================================
+
+--- INNER JOIN (only matching rows) ---
+SELECT * FROM table1
+INNER JOIN table2 ON table1.col = table2.col;
+
+Example:
+  SELECT * FROM invoice INNER JOIN item ON invoice.item_no = item.item_no;
+  SELECT * FROM invoice INNER JOIN item ON invoice.item_no = item.item_no WHERE item.rate >= 10;
+
+--- LEFT OUTER JOIN (all from left, NULLs for unmatched right) ---
+SELECT * FROM table1
+LEFT [OUTER] JOIN table2 ON table1.col = table2.col;
+
+Example:
+  SELECT item.item_no, item_descrip, invoice.invoice_no, invoice.sold_qty
+  FROM item LEFT JOIN invoice ON item.item_no = invoice.item_no;
+
+--- RIGHT OUTER JOIN (all from right, NULLs for unmatched left) ---
+SELECT * FROM table1
+RIGHT [OUTER] JOIN table2 ON table1.col = table2.col;
+
+--- FULL OUTER JOIN (all rows from both, NULLs where no match) ---
+SELECT * FROM table1
+FULL [OUTER] JOIN table2 ON table1.col = table2.col;
+
+--- CROSS JOIN (cartesian product: rows1 × rows2) ---
+SELECT * FROM table1 CROSS JOIN table2;
+-- or --
+SELECT * FROM table1, table2;
+
+--- ANTI-JOIN (rows in left NOT in right) ---
+SELECT * FROM Table_1 t1
+LEFT JOIN Table_2 t2 ON t1.id = t2.id
+WHERE t2.id IS NULL;
+
+--- SEMI-JOIN (departments with at least one customer) ---
+SELECT dept_id FROM departments
+WHERE EXISTS (SELECT 1 FROM customer WHERE customer.dept_id = departments.dept_id);
+
+--- SELF JOIN (table joins itself) ---
+SELECT a.col, b.col FROM table a, table b WHERE a.field = b.field;
+
+Example:
+  SELECT a.name, b.age, a.SALARY FROM CUSTOMERS a, CUSTOMERS b WHERE a.SALARY < b.SALARY;
+
+--- NATURAL JOIN (auto-joins on same-named columns) ---
+SELECT * FROM T1 NATURAL [INNER | LEFT | RIGHT] JOIN T2;
+
+--- EQUI JOIN (explicit = in WHERE) ---
+SELECT col_list FROM t1, t2 WHERE t1.col = t2.col;
+-- or --
+SELECT * FROM t1 JOIN t2 ON (join_condition);
+
+Join Summary:
+  INNER JOIN   → matching rows only
+  LEFT JOIN    → all left + matching right (NULL if no match)
+  RIGHT JOIN   → all right + matching left (NULL if no match)
+  FULL JOIN    → all rows both sides (NULL where no match)
+  CROSS JOIN   → every combination (no ON clause)
+  ANTI-JOIN    → left rows with NO right match (LEFT JOIN + IS NULL)
+  SEMI-JOIN    → left rows where match EXISTS (one copy per match)
+  SELF JOIN    → table joined to itself
+
+
+================================================================================
+LAB 7 — PL/pgSQL BLOCK STRUCTURE, IF/CASE/LOOPS
+================================================================================
+
+--- BLOCK STRUCTURE ---
+[ <<label>> ]
+[ DECLARE
+    variable_name data_type := initial_value; ]
+BEGIN
+    statements;
+END [ label ];
+
+Anonymous block (run once):
+  DO $$ DECLARE ... BEGIN ... END $$;
+
+--- VARIABLE DECLARATION ---
+  var_name INTEGER := 0;
+  var_name film%rowtype;               -- row type of a table
+  var_name film.film_id%type := 100;  -- same type as a column
+
+--- RAISE NOTICE (print output) ---
+  RAISE NOTICE 'Message: %', variable;   -- % is a placeholder
+
+--- SELECT INTO ---
+  SELECT col INTO variable FROM table WHERE condition;
+  -- FOUND = true if row returned, false if not
+
+--- IF-THEN ---
+IF condition THEN
+    statements;
+END IF;
+
+--- IF-THEN-ELSE ---
+IF condition THEN
+    statements;
+ELSE
+    alternative;
+END IF;
+
+--- IF-THEN-ELSIF ---
+IF condition_1 THEN
+    statements;
+ELSIF condition_2 THEN
+    statements;
+ELSIF condition_n THEN
+    statements;
+ELSE
+    else_statements;
+END IF;
+
+Example:
+  IF v_film.length > 0 AND v_film.length <= 50 THEN
+      len_description := 'Short';
+  ELSIF v_film.length > 50 AND v_film.length < 120 THEN
+      len_description := 'Medium';
+  ELSIF v_film.length > 120 THEN
+      len_description := 'Long';
+  ELSE
+      len_description := 'N/A';
+  END IF;
+
+--- SIMPLE CASE (match single expression) ---
+CASE search_expression
+    WHEN value1 THEN statements;
+    WHEN value2 THEN statements;
+    ELSE else_statements;
+END CASE;
+
+Example:
+  CASE rate
+      WHEN 0.99 THEN price_segment = 'Mass';
+      WHEN 2.99 THEN price_segment = 'Mainstream';
+      WHEN 4.99 THEN price_segment = 'High End';
+      ELSE price_segment = 'Unspecified';
+  END CASE;
+
+--- SEARCHED CASE (boolean expressions) ---
+CASE
+    WHEN boolean_expr_1 THEN statements;
+    WHEN boolean_expr_2 THEN statements;
+    ELSE statements;
+END CASE;
+
+Example:
+  CASE
+      WHEN total_payment > 200 THEN service_level = 'Platinum';
+      WHEN total_payment > 100 THEN service_level = 'Gold';
+      ELSE service_level = 'Silver';
+  END CASE;
+
+--- WHILE LOOP (pretest: checks condition BEFORE each iteration) ---
+WHILE condition LOOP
+    statements;
+END LOOP;
+
+Example:
+  DECLARE counter INTEGER := 0;
+  WHILE counter < 5 LOOP
+      RAISE NOTICE 'Counter %', counter;
+      counter := counter + 1;
+  END LOOP;
+  -- Prints: Counter 0, 1, 2, 3, 4
+
+--- UNCONDITIONAL LOOP (use EXIT to break) ---
+<<label>>
+LOOP
+    statements;
+    EXIT WHEN condition;   -- or: IF condition THEN EXIT; END IF;
+END LOOP;
+
+-- Nested loops:
+<<outer>>
+LOOP
+    <<inner>>
+    LOOP
+        EXIT <<inner>> WHEN condition;  -- exits inner only
+    END LOOP;
+END LOOP;
+
+Fibonacci example:
+  LOOP
+      EXIT WHEN counter = n;
+      counter := counter + 1;
+      SELECT j, i + j INTO i, j;  -- simultaneous swap
+  END LOOP;
+
+
+================================================================================
+LAB 8 — CURSORS, FUNCTIONS, PROCEDURES
+================================================================================
+
+--- CURSORS ---
+-- Declare:
+DECLARE
+    my_cursor REFCURSOR;
+    cur_films CURSOR FOR SELECT * FROM film;
+    cur_films2 CURSOR (year INTEGER) FOR SELECT * FROM film WHERE release_year = year;
+
+-- Open:
+    OPEN cur_films;
+    OPEN cur_films2(year := 2005);
+
+-- Fetch:
+    FETCH cur_films INTO row_film;
+    FETCH LAST FROM cur_films INTO title, release_year;
+    -- Directions: NEXT, PRIOR, FIRST, LAST, ABSOLUTE n, RELATIVE n, FORWARD, BACKWARD
+
+-- Close:
+    CLOSE cur_films;
+
+--- FUNCTIONS ---
+CREATE [OR REPLACE] FUNCTION function_name(param1 type, param2 type)
+RETURNS return_type
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    local_var type;
+BEGIN
+    -- logic
+    RETURN value;
+END;
+$$;
+
+Full example:
+  CREATE FUNCTION get_film_count(len_from INT, len_to INT)
+  RETURNS INT
+  LANGUAGE plpgsql AS $$
+  DECLARE film_count INTEGER;
+  BEGIN
+      SELECT COUNT(*) INTO film_count FROM film WHERE length BETWEEN len_from AND len_to;
+      RETURN film_count;
+  END; $$;
+
+-- Calling (3 ways):
+  SELECT get_film_count(40, 90);                                          -- positional
+  SELECT get_film_count(len_from => 40, len_to => 90);   -- named
+  SELECT get_film_count(40, len_to => 90);               -- mixed
+
+-- Note: named args use => or := (legacy)
+-- Cannot put named args before positional args
+
+--- STORED PROCEDURES ---
+CREATE [OR REPLACE] PROCEDURE procedure_name(parameter_list)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    -- variables
+BEGIN
+    -- body
+    COMMIT;  -- procedures CAN commit/rollback
+END; $$;
+
+-- Differences from functions:
+  - No RETURN type (no RETURNS clause)
+  - Cannot use: RETURN expression;
+  - CAN use: RETURN;  (to stop early)
+  - Parameters: IN or INOUT only (no OUT)
+  - Called with CALL, not SELECT
+
+-- Calling:
+  CALL procedure_name(arg1, arg2);
+
+Transfer example:
+  CREATE OR REPLACE PROCEDURE transfer(sender INT, receiver INT, amount DEC)
+  LANGUAGE plpgsql AS $$
+  BEGIN
+      UPDATE accounts SET balance = balance - amount WHERE id = sender;
+      UPDATE accounts SET balance = balance + amount WHERE id = receiver;
+      COMMIT;
+  END; $$;
+
+  CALL transfer(1, 2, 500);
+
+Function vs Procedure:
+  Functions  → return a value, called in SELECT, NO transaction control
+  Procedures → no return value, called with CALL, CAN commit/rollback
+
+
+================================================================================
+LAB 9 — TRIGGERS, VIEWS, INDEXES
+================================================================================
+
+--- TRIGGERS ---
+-- Step 1: Create trigger function
+CREATE [OR REPLACE] FUNCTION function_name()
+RETURNS TRIGGER
+LANGUAGE PLPGSQL AS $$
+BEGIN
+    -- Use OLD (before) and NEW (after) row
+    -- Return NEW for BEFORE triggers on row-level
+END; $$;
+
+-- Step 2: Bind trigger to table
+CREATE TRIGGER trigger_name
+{BEFORE | AFTER} {INSERT | UPDATE | DELETE | TRUNCATE}
+ON table_name
+FOR EACH {ROW | STATEMENT}
+EXECUTE PROCEDURE function_name();
+
+-- Drop trigger:
+DROP TRIGGER trigger_name ON table_name;
+
+Row vs Statement:
+  FOR EACH ROW       → fires once per affected row
+  FOR EACH STATEMENT → fires once per SQL statement
+
+OLD / NEW:
+  OLD → row state before UPDATE/DELETE
+  NEW → row state after INSERT/UPDATE
+  BEFORE trigger → can modify NEW before write
+
+Audit trail example:
+  CREATE TRIGGER last_name_changes
+  BEFORE UPDATE ON employees
+  FOR EACH ROW
+  EXECUTE PROCEDURE log_last_name_changes();
+
+  -- Function checks: IF NEW.last_name <> OLD.last_name THEN INSERT INTO audits...
+
+--- VIEWS ---
+-- Create:
+CREATE VIEW view_name AS
+SELECT ... FROM ... [WHERE ...] [JOIN ...];
+
+-- Use:
+SELECT * FROM view_name;
+
+-- Rename:
+ALTER VIEW view_name RENAME TO new_name;
+
+-- Drop:
+DROP VIEW [IF EXISTS] view_name;
+
+-- Updatable view (no aggregates, no JOIN, no DISTINCT):
+INSERT INTO view_name (col1, col2) VALUES (val1, val2);  -- inserts into base table
+DELETE FROM view_name WHERE condition;                   -- deletes from base table
+
+View benefits:
+  1. Simplify complex queries
+  2. Restrict data access (security)
+  3. Abstraction layer (hide schema changes)
+
+--- INDEXES ---
+-- Create:
+CREATE [UNIQUE] INDEX index_name ON table_name (col1 [ASC|DESC], col2);
+
+-- Create with type:
+CREATE INDEX idx_name ON table_name USING HASH (column);
+
+-- Create without locking table:
+CREATE INDEX CONCURRENTLY idx_name ON table_name (column);
+
+-- Drop:
+DROP INDEX index_name;
+
+-- Check if index is used:
+EXPLAIN SELECT * FROM table WHERE col = value;
+
+-- UNIQUE index:
+CREATE UNIQUE INDEX idx_name ON table_name (column);       -- single col
+CREATE UNIQUE INDEX idx_name ON table_name (col1, col2);  -- multi-col
+
+-- View table indexes:
+SELECT tablename, indexname, indexdef FROM pg_indexes WHERE tablename = 'table_name';
+
+Index types:
+  B-tree   → default; equality, range, ORDER BY, LIKE 'prefix%'
+  Hash     → only equality (=)
+  GIN      → arrays, JSONB, full-text search
+  BRIN     → huge tables with linear ordering (timestamps)
+  GiST     → geometric, full-text
+  SP-GiST  → unbalanced structures (GIS, IP routing)
+
+NULLS in indexes:
+  NULLS FIRST → NULLs before non-nulls (default when DESC)
+  NULLS LAST  → NULLs after non-nulls (default when ASC)
+
+UNIQUE + NULL: multiple NULLs are allowed (NULLs are distinct)
+
+
+================================================================================
+LAB 10 — PostgreSQL vs MongoDB
+================================================================================
+
+--- CREATING TABLE vs COLLECTION ---
+SQL:
+  CREATE TABLE people (user_id VARCHAR(30), age INT, status CHAR(1));
+
+MongoDB:
+  -- No CREATE needed; collection created on first insert
+
+--- INSERT ---
+SQL:
+  INSERT INTO people(user_id, age, status) VALUES ("bcd001", 45, "A");
+
+MongoDB:
+  db.people.insertOne({ user_id: "bcd001", age: 45, status: "A" })
+  db.people.insertMany([{...}, {...}])
+
+--- SELECT / FIND ---
+SQL → MongoDB:
+  SELECT * FROM people                               → db.people.find()
+  SELECT id, user_id, status FROM people             → db.people.find({}, {user_id:1, status:1})
+  SELECT user_id, status FROM people                 → db.people.find({}, {user_id:1, status:1, _id:0})
+  WHERE status = "A"                                 → { status: "A" }
+  WHERE status != "A"                                → { status: { ne: "A" } }
+  WHERE status="A" AND age=50                        → { status:"A", age:50 }
+  WHERE age > 25                                   → { age: { gt: 25 } }
+  WHERE age >= 25                                  → { age: { gte: 25 } }
+  WHERE age < 25                                   → { age: { lt: 25 } }
+  WHERE age <= 25                                  → { age: { lte: 25 } }
+  WHERE user_id LIKE "%bc%"                          → { user_id: /bc/ }
+  ORDER BY user_id ASC                               → .sort({ user_id: 1 })
+  ORDER BY user_id DESC                              → .sort({ user_id: -1 })
+  COUNT(*)                                         → db.people.count()
+  COUNT(user_id) [non-null only]                   → db.people.count({ user_id: { exists: true } })
+
+--- UPDATE ---
+SQL:
+  UPDATE people SET status="C" WHERE age > 25;
+  UPDATE people SET age = age + 3 WHERE status = "A";
+
+MongoDB:
+  db.people.updateMany({ age: { gt: 25 } }, { set: { status: "C" } })
+  db.people.updateMany({ status: "A" }, { inc: { age: 3 } })
+
+Update operators:
+  set   → set a field value
+  inc   → increment a field by a value
+  unset → remove a field
+
+--- DELETE ---
+SQL:
+  DELETE FROM people WHERE status = "D";
+  DELETE FROM people;
+
+MongoDB:
+  db.people.deleteMany({ status: "D" })
+  db.people.deleteMany({})
+
+--- AGGREGATION MAPPING ---
+SQL              → MongoDB Operator
+WHERE            → match
+GROUP BY         → group
+HAVING           → match (after group)
+ORDER BY         → sort
+SUM()            → sum
+COUNT()          → sum or sortByCount
+JOIN             → lookup
+UNWIND array     → unwind
+
+Aggregation pipeline structure:
+  db.collection.aggregate([ stage1, stage2, ... ])
+
+Examples:
+  -- COUNT all:
+  db.orders.aggregate([{ group: { _id: null, count: { sum: 1 } } }])
+
+  -- SUM price:
+  db.orders.aggregate([{ group: { _id: null, total: { sum: "price" } } }])
+
+  -- GROUP BY cust_id, SUM, SORT:
+  db.orders.aggregate([
+      { group: { _id: "cust_id", total: { sum: "price" } } },
+      { sort: { total: 1 } }
+  ])
+
+  -- GROUP BY two fields:
+  db.orders.aggregate([{
+      group: {
+          _id: { cust_id: "cust_id", ord_date: { dateToString: { format: "%Y-%m-%d", date: "ord_date" } } },
+          total: { sum: "price" }
+      }
+  }])
+
+  -- UNWIND array then GROUP (like JOIN + SUM):
+  db.orders.aggregate([
+      { unwind: "items" },
+      { group: { _id: "cust_id", qty: { sum: "items.qty" } } }
+  ])
+
+--- WHEN TO USE WHICH ---
+Use PostgreSQL when:
+  - Complex SQL queries needed
+  - Strong data integrity (ACID)
+  - Relational/tabular data model
+  - Apps: banking, healthcare, BI reporting
+
+Use MongoDB when:
+  - Schema changes frequently (agile development)
+  - Unstructured or varied data
+  - Horizontal scaling required
+  - Apps: content management, mobile, real-time analytics
+
+
+================================================================================
+QUICK REFERENCE — COMMON PATTERNS
+================================================================================
+
+-- Find duplicates:
+SELECT col, COUNT(*) FROM table GROUP BY col HAVING COUNT(*) > 1;
+
+-- Top N per group (use subquery or window functions):
+SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY group_col ORDER BY rank_col DESC) AS rn FROM table) t WHERE rn = 1;
+
+-- Employees with above-average salary:
+SELECT * FROM employees WHERE salary > (SELECT AVG(salary) FROM employees);
+
+-- Upsert (INSERT or UPDATE):
+INSERT INTO table (col1, col2) VALUES (v1, v2)
+ON CONFLICT (col1) DO UPDATE SET col2 = EXCLUDED.col2;
+
+-- COALESCE (return first non-null):
+SELECT COALESCE(phone, email, 'N/A') AS contact FROM users;
+
+-- CASE expression (inline, not statement):
+SELECT name, CASE WHEN salary > 50000 THEN 'High' ELSE 'Low' END AS category FROM employees;
+
+-- Date functions:
+  DATE(timestamp)            → extract date only
+  NOW()                      → current timestamp
+  EXTRACT(YEAR FROM date)   → extract year
+  AGE(date)                  → interval since date
+
+-- String operations:
+  first_name || ' ' || last_name   → concatenation
+  UPPER(col), LOWER(col)
+  LENGTH(col)
+  LIKE 'prefix%'   → starts with
+  LIKE '%suffix'   → ends with
+  LIKE '%middle%'  → contains
+
+-- Type casting:
+  CAST(col AS INTEGER)
+  col::INTEGER    -- PostgreSQL shorthand
+
+-- LIMIT and OFFSET:
+  SELECT * FROM table LIMIT 10 OFFSET 20;  -- page 3 of 10 per page
+
+-- EXISTS vs IN:
+  EXISTS → stops at first match, efficient for correlated subqueries
+  IN     → evaluates all values, better for small fixed lists
+  NOT IN → careful: if subquery returns NULL, entire result is NULL
+  NOT EXISTS → safer than NOT IN when NULLs may appear
+
+-- Trigger special variables:
+  OLD      → row before change
+  NEW      → row after change
+  TG_NAME  → trigger name
+  TG_OP    → operation (INSERT/UPDATE/DELETE)
+  TG_TABLE_NAME → table name
