@@ -1,0 +1,92 @@
+`timescale 1ns / 1ps
+
+module single_cycle_processor_tb;
+
+    reg clk;
+    reg reset;
+
+    wire [31:0] pc_out;
+    wire [31:0] instruction;
+    wire [31:0] alu_result;
+    wire [31:0] read_data;
+    wire        zero_flag;
+
+    single_cycle_processor uut (
+        .clk(clk),
+        .reset(reset),
+        .pc_out(pc_out),
+        .instruction(instruction),
+        .alu_result(alu_result),
+        .read_data(read_data),
+        .zero_flag(zero_flag)
+    );
+
+    initial begin
+        $dumpfile("single_cycle_processor.vcd");
+        $dumpvars(0, single_cycle_processor_tb);
+    end
+
+    initial begin
+        clk = 1'b0;
+        forever #5 clk = ~clk;
+    end
+
+    initial begin
+        reset = 1'b1;
+        #12;
+        reset = 1'b0;
+
+        #150;
+
+        $display("\n[FINAL REGISTER VALUES]");
+        $display("x1: %d (Expected: 10)", uut.regs.registers[1]);
+        $display("x2: %d (Expected: 20)", uut.regs.registers[2]);
+        $display("x3: %d (Expected: 30)", uut.regs.registers[3]);
+        $display("x4: %d (Expected: 10)", uut.regs.registers[4]);
+        $display("x5: %d (Expected: 10)", uut.regs.registers[5]);
+        $display("x6: %d (Expected: 30)", uut.regs.registers[6]);
+
+        $display("\n[FINAL DATA MEMORY VALUES]");
+        $display("mem[8] : %d (Expected: 30)", uut.dmem.mem[2]);
+        $display("mem[12]: %d (Expected: 0)",  uut.dmem.mem[3]);
+        $display("mem[16]: %d (Expected: 20)", uut.dmem.mem[4]);
+        
+        $display("\nSIMULATION COMPLETE\n");
+
+        $finish;
+    end
+
+    // --- Instruction Decoder for Simulation Trace ---
+    reg [255:0] mnemonic;
+    always @(instruction) begin
+        case (instruction[6:0])
+            7'b0000011: mnemonic = "lw";
+            7'b0100011: mnemonic = "sw";
+            7'b1100011: mnemonic = "beq";
+            7'b0110011: begin
+                case (instruction[14:12])
+                    3'b000: mnemonic = (instruction[31:25] == 7'h20) ? "sub" : "add";
+                    3'b111: mnemonic = "and";
+                    3'b110: mnemonic = "or";
+                    default: mnemonic = "unknown";
+                endcase
+            end
+            default: mnemonic = "nop/unknown";
+        endcase
+    end
+
+    initial begin
+        $display("\n[SIMULATION TRACE]");
+        $display("-------------------------------------------------------");
+        $display(" Time |  PC  | Instruction | Mnemonic | ALU Out | Zero");
+        $display("-------------------------------------------------------");
+        forever begin
+            @(negedge clk);
+            if (instruction != 32'h0 && instruction !== 32'hx) begin
+                $display(" %4t |  %h |  %h |   %-5s  | %h |  %b", 
+                         $time, pc_out, instruction, mnemonic, alu_result, zero_flag);
+            end
+        end
+    end
+
+endmodule
