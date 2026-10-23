@@ -1,0 +1,60 @@
+node* getTail(node* start) {
+    while (start != NULL && start->next != NULL) {
+        start = start->next;
+    }
+    return start;
+}
+
+node* quickSort(node* start) {
+    if (start == NULL || start->next == NULL)    // base case
+        return start;
+
+    node* pivot = start;
+    node* rest = start->next;
+    pivot->next = NULL;                          // detach the pivot
+
+    node* lessHead = NULL;    node* lessTail = NULL;
+    node* equalHead = pivot;  node* equalTail = pivot;
+    node* greaterHead = NULL; node* greaterTail = NULL;
+
+    while (rest != NULL) {
+        node* nextNode = rest->next;
+        rest->next = NULL;
+
+        if (rest->weight < pivot->weight) {
+            if (lessHead == NULL) {
+                lessHead = rest;
+                lessTail = rest;
+            } else {
+                lessTail->next = rest;
+                lessTail = rest;
+            }
+        }
+        else if (rest->weight == pivot->weight) {
+            equalTail->next = rest;
+            equalTail = rest;
+        }
+        else {
+            if (greaterHead == NULL) {
+                greaterHead = rest;
+                greaterTail = rest;
+            } else {
+                greaterTail->next = rest;
+                greaterTail = rest;
+            }
+        }
+        rest = nextNode;
+    }
+
+    lessHead = quickSort(lessHead);              // sort the two outer lists
+    greaterHead = quickSort(greaterHead);
+
+    // join: less -> equal -> greater
+    equalTail->next = greaterHead;               // fine even if greaterHead is NULL
+
+    if (lessHead == NULL)
+        return equalHead;
+
+    getTail(lessHead)->next = equalHead;         // lessTail is stale after recursion
+    return lessHead;
+}

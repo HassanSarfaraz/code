@@ -1,0 +1,59 @@
+#include <iostream>
+using namespace std;
+
+int main() {
+    int numStudents;
+
+    // 1. Get the number of students (rows)
+    cout << "Enter the number of students: ";
+    cin >> numStudents;
+
+    // 2. Allocate an array of pointers for students
+    int** scores = new int*[numStudents];
+
+    // Array to keep track of how many quizzes each student took
+    int* quizCounts = new int[numStudents];
+
+    // 3. For each student, get number of quizzes and allocate varying row sizes
+    for (int i = 0; i < numStudents; i++) {
+        cout << "\nEnter number of quizzes for Student " << (i + 1) << ": ";
+        cin >> quizCounts[i];
+
+        // Allocate exact memory needed for this specific student (Ragged Array)
+        scores[i] = new int[quizCounts[i]];
+
+        // Enter scores for this student
+        cout << "Enter " << quizCounts[i] << " quiz score(s) for Student " << (i + 1) << ":\n";
+        for (int j = 0; j < quizCounts[i]; j++) {
+            cout << "  Quiz " << (j + 1) << ": ";
+            cin >> scores[i][j];
+        }
+    }
+
+    // 4. Display the jagged array and calculate each student's average
+    cout << "\n==========================================" << endl;
+    cout << "           STUDENT QUIZ SCORES            " << endl;
+    cout << "==========================================" << endl;
+
+    for (int i = 0; i < numStudents; i++) {
+        cout << "Student " << (i + 1) << " (" << quizCounts[i] << " quizzes): ";
+        
+        int sum = 0;
+        for (int j = 0; j < quizCounts[i]; j++) {
+            cout << scores[i][j] << "\t";
+            sum += scores[i][j];
+        }
+
+        double average = (double)sum / quizCounts[i];
+        cout << " | Average: " << average << endl;
+    }
+
+    // 5. Free dynamically allocated memory
+    for (int i = 0; i < numStudents; i++) {
+        delete[] scores[i]; // Free each student's quiz array
+    }
+    delete[] scores;      // Free main pointer array
+    delete[] quizCounts;  // Free quiz counts array
+
+    return 0;
+}
