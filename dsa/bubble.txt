@@ -1,0 +1,35 @@
+node* bubbleSort(node* start) {
+    if (start == NULL || start->next == NULL)
+        return start;
+
+    bool swapped;
+    do {
+        swapped = false;
+        node* before = NULL;                 // node just before curr
+        node* curr = start;
+
+        while (curr->next != NULL) {
+            node* nxt = curr->next;
+
+            if (curr->weight > nxt->weight) {   // strict >: equal weights are NOT swapped
+                // swap curr and nxt by relinking
+                curr->next = nxt->next;
+                nxt->next = curr;
+
+                if (before == NULL)
+                    start = nxt;                // the head changed
+                else
+                    before->next = nxt;
+
+                before = nxt;                   // nxt now sits where curr was
+                swapped = true;
+                // curr stays the same: its new next is the following node
+            } else {
+                before = curr;
+                curr = curr->next;
+            }
+        }
+    } while (swapped);
+
+    return start;
+}

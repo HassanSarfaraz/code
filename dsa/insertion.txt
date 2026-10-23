@@ -1,0 +1,22 @@
+node* insertionSort(node* start) {
+    node* sorted = NULL;                         // new list, starts empty
+    node* curr = start;
+
+    while (curr != NULL) {
+        node* nextNode = curr->next;             // save before relinking
+
+        if (sorted == NULL || curr->weight < sorted->weight) {
+            curr->next = sorted;                 // goes in front
+            sorted = curr;
+        } else {
+            node* temp = sorted;
+            while (temp->next != NULL && temp->next->weight <= curr->weight) {
+                temp = temp->next;               // <= : go past equal weights
+            }
+            curr->next = temp->next;             // link in after temp
+            temp->next = curr;
+        }
+        curr = nextNode;
+    }
+    return sorted;
+}

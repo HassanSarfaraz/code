@@ -1,0 +1,55 @@
+// Finds the end of the first half using slow and fast pointers.
+node* getMiddle(node* start) {
+    node* slow = start;
+    node* fast = start->next;
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+// Merges two sorted lists by relinking nodes. No temp array is needed.
+node* mergeLists(node* a, node* b) {
+    node* resHead = NULL;
+    node* resTail = NULL;
+
+    while (a != NULL && b != NULL) {
+        node* chosen;
+        if (a->weight <= b->weight) {      // <= : tie takes from the left list
+            chosen = a;
+            a = a->next;
+        } else {
+            chosen = b;
+            b = b->next;
+        }
+        chosen->next = NULL;
+
+        if (resHead == NULL) {
+            resHead = chosen;
+            resTail = chosen;
+        } else {
+            resTail->next = chosen;
+            resTail = chosen;
+        }
+    }
+
+    node* restList = (a != NULL) ? a : b;  // whichever list still has nodes
+    if (resHead == NULL) return restList;
+    resTail->next = restList;
+    return resHead;
+}
+
+node* mergeSort(node* start) {
+    if (start == NULL || start->next == NULL)   // base case: 0 or 1 node
+        return start;
+
+    node* mid = getMiddle(start);
+    node* secondHalf = mid->next;
+    mid->next = NULL;                           // cut the list in two
+
+    node* left = mergeSort(start);
+    node* right = mergeSort(secondHalf);
+
+    return mergeLists(left, right);
+}
